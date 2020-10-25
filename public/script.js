@@ -1,4 +1,5 @@
 const socket = io('/')
+
 const videoGrid = document.getElementById('video-grid')
 const myPeer = new Peer(undefined, {
   path: '/peerjs',
@@ -6,6 +7,7 @@ const myPeer = new Peer(undefined, {
   port: '4321'
 })
 let myVideoStream;
+var date = new Date().toLocaleString();
 const myVideo = document.createElement('video')
 myVideo.muted = true;
 const peers = {}
@@ -23,7 +25,7 @@ navigator.mediaDevices.getUserMedia({
     })
   })
 
-  socket.on('user-connected', userId => {
+  socket.on('user-connected', (userId) => {
     connectToNewUser(userId, stream)
   })
   // input value
@@ -39,15 +41,30 @@ navigator.mediaDevices.getUserMedia({
     $("ul").append(`<li class="message"><b>user</b><br/>${message}</li>`);
     scrollToBottom()
   })
+//testing
+  socket.emit('user-connected', ()=>{
+    $('html').on('user-connected',function () {
+        socket.emit('message', `User joined at ${date}`);
+    });
+  })
+  
+
+  socket.on('createMessage', message =>{
+      $("ul").append(`<li class="message"><b>user</b><br/>${message}</li>`)
+  })
 })
 
-socket.on('user-disconnected', userId => {
+//end of testing
+
+socket.on('user-disconnected', (userId, date) => {
   if (peers[userId]) peers[userId].close()
 })
+
 
 myPeer.on('open', id => {
   socket.emit('join-room', ROOM_ID, id)
 })
+
 
 function connectToNewUser(userId, stream) {
   const call = myPeer.call(userId, stream)
